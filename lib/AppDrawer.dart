@@ -12,7 +12,8 @@ class AppDrawer extends StatelessWidget {
     return Drawer(
       child: Container(
         color: const Color.fromARGB(255, 68, 193, 255),
-        child: Column(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
             const SizedBox(height: 60),
 
@@ -43,13 +44,11 @@ class AppDrawer extends StatelessWidget {
             ),
 
             const SizedBox(height: 10),
-
             const Divider(
               color: Colors.black54,
               indent: 40,
               endIndent: 40,
             ),
-
             const SizedBox(height: 10),
 
             // Menu Items
@@ -63,7 +62,6 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  // Drawer item
   Widget _item(BuildContext context, IconData icon, String title, Widget page) {
     return ListTile(
       leading: Icon(icon, color: Colors.black87),
@@ -75,34 +73,32 @@ class AppDrawer extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.pop(context); // close drawer first
-        Future.delayed(const Duration(milliseconds: 100), () { // slightly faster delay
-          Navigator.of(context).pushReplacement(_popupRoute(page));
-        });
-      },
-    );
-  }
+        Navigator.pop(context); // Close the drawer first
 
-  // Smooth popup animation (fade + scale) — faster
-  Route _popupRoute(Widget page) {
-    return PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 250), // faster
-      pageBuilder: (context, animation, secondaryAnimation) => page,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        var fade = Tween<double>(begin: 0.0, end: 1.0).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-        );
-        var scale = Tween<double>(begin: 0.8, end: 1.0).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-        );
+        // Avoid pushing same page again
+        if (ModalRoute.of(context)?.settings.name != page.toString()) {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => page,
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                const begin = Offset(1.0, 0.0);
+                const end = Offset.zero;
+                const curve = Curves.easeInOut;
 
-        return FadeTransition(
-          opacity: fade,
-          child: ScaleTransition(
-            scale: scale,
-            child: child,
-          ),
-        );
+                final tween = Tween(begin: begin, end: end)
+                    .chain(CurveTween(curve: curve));
+
+                return SlideTransition(
+                  position: animation.drive(tween),
+                  child: child,
+                );
+              },
+              transitionDuration: const Duration(milliseconds: 200),
+            ),
+          );
+        }
       },
     );
   }

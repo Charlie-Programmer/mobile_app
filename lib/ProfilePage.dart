@@ -1,15 +1,54 @@
 import 'package:flutter/material.dart';
 import 'AppDrawer.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  bool _isBig = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  void _onAvatarTap() {
+    if (_isBig) {
+      _controller.reverse();
+    } else {
+      _controller.forward();
+    }
+    _isBig = !_isBig;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: const AppDrawer(),
       backgroundColor: Colors.white,
-
       body: Column(
         children: [
           // 🔷 Top curved header
@@ -23,7 +62,7 @@ class ProfilePage extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       Color.fromARGB(255, 68, 193, 255),
-                      Color.fromARGB(255, 68, 193, 255)
+                      Color.fromARGB(255, 68, 193, 255),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -65,16 +104,22 @@ class ProfilePage extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
-                  // ✅ Profile Image with border
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
-                    child: const CircleAvatar(
-                      radius: 40,
-                      backgroundImage: AssetImage('assets/profile.jpg'),
+                  // ✅ Animated Avatar on Click
+                  GestureDetector(
+                    onTap: _onAvatarTap,
+                    child: ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 40,
+                          backgroundImage: AssetImage('assets/profile.jpg'),
+                        ),
+                      ),
                     ),
                   ),
                 ],
